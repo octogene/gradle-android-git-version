@@ -63,6 +63,14 @@ Branches listed in `hideBranches` won't appear.
 
 You can customize this layout with `format` (see below).
 
+## Auto snapshot version
+
+If `autoSnapshot` is set to `true`, the intermediate version format will use the `snapshotFormat`.
+
+The version part of the version tag specified in `snapshotIncrementOn` will be incremented automatically, assuming that the version tag follows semantic versioning.
+
+This avoids having to always create snapshot tags.
+
 ## Version Codes
 
 Version codes are calculated relative to the most recent tag. For example, version 1.2.3 will have
@@ -114,6 +122,9 @@ androidGitVersion {
     prefix 'lib-'
     tagPattern(/^R[0-9]+.*/)
     untrackedIsDirty = false
+    autoSnapshot = false
+    snapshotIncrementOn = 'M'
+    snapshotFormat = '%tag%-SNAPSHOT-%count%'
 }
 
 android {

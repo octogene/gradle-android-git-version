@@ -110,6 +110,24 @@ class AndroidGitVersionExtension {
     String codeFormat
 
     /**
+     * Auto format the version name with a snapshot suffix if there are other
+     * commits after the latest tag. Will auto increment the part of the version
+     * name specified in [snapshotIncrementOn].
+     */
+    boolean autoSnapshot = false
+
+    /**
+     * Format for the snapshot version name
+     */
+    String snapshotFormat = '%tag%-SNAPSHOT'
+
+    /**
+     * Part of the version number on which the increment should be done.
+     * Assumes that the version name uses semantic versioning.
+     */
+    Character snapshotIncrementOn = 'P'
+
+    /**
      * Map of ABI designators to integers.
      */
     def abis = abis = ['armeabi':1, 'armeabi-v7a':2, 'arm64-v8a':3, 'mips':5, 'mips64':6,
@@ -144,6 +162,10 @@ class AndroidGitVersionExtension {
 
         def parts = [tag: results.lastVersion, describe: results.gitDescribeOutput]
         if (results.revCount > 0) {
+            if (autoSnapshot) {
+                name = this.snapshotFormat
+                parts['tag'] = incrementTag(parts['tag'])
+            }
             parts['count'] = results.revCount
             parts['commit'] = results.commitPrefix
             String branchName = results.branchName
@@ -161,6 +183,29 @@ class AndroidGitVersionExtension {
         name = name.replaceAll(/%[^%]+%/,'')
 
         return name
+    }
+
+    /**
+     * Increment the version tag based on the [snapshotIncrementOn]
+     *
+     * Return the incremented tag
+     */
+    final String incrementTag(String tag) {
+        Integer[] versionParts = tag.split("\\.").collect {return Integer.valueOf(it) }
+        switch(this.snapshotIncrementOn) {
+            case 'M': {
+                versionParts[0]++
+                versionParts[1] = 0
+                versionParts[2] = 0
+            }; break
+            case 'N': {
+                versionParts[1]++
+                versionParts[2] = 0
+            }; break
+            case 'P': versionParts[2]++; break
+            default: throw new GradleException("Unrecognized char " + this.snapshotIncrementOn + " in snapshotIncrementOn")
+        }
+        return versionParts.join('.')
     }
 
     /**
